@@ -2,58 +2,213 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Outreach Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&P Brothers — Outreach Log</title>
+<!--
+  ============================================================================
+  SETUP — do this once before the site will work:
+
+  1. Go to https://console.firebase.google.com and create a free project.
+  2. Click the "</>" (Web) icon to register a web app. Copy the config object
+     it gives you and paste it into FIREBASE_CONFIG below.
+  3. In the left menu: Build > Authentication > Get started > Sign-in method
+     > enable "Email/Password".
+  4. In the left menu: Build > Firestore Database > Create database >
+     start in "test mode" for now.
+  5. Go to Firestore > Rules tab and paste in the ruleset from RULES.txt
+     (see the comment block at the bottom of this file) > Publish.
+  6. Set ADMIN_SIGNUP_CODE below to a secret word only you know.
+     Whoever types this code correctly when signing up becomes Admin.
+     Everyone else who signs up becomes a Caller automatically.
+  7. Push to GitHub, redeploy on Vercel. Done.
+  ============================================================================
+-->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
   :root {
-    --navy: #16233d;
-    --navy-light: #223357;
-    --slate: #4b5768;
-    --slate-light: #8792a1;
-    --line: #dfe3ea;
-    --bg: #f4f6f9;
+    --navy: #142433;
+    --navy-deep: #0d1a26;
+    --gold: #c8963e;
+    --gold-light: #e0b465;
+    --slate: #55636f;
+    --slate-light: #8b98a3;
+    --line: #e2e6ea;
+    --bg: #f6f7f9;
     --card: #ffffff;
-    --amber: #c9852a;
     --green: #2f8f5b;
-    --red: #c34a3d;
+    --red: #c1443a;
     --blue: #2f6fa8;
     --grey-tag: #eef0f3;
     font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, Arial, sans-serif;
   }
-
   * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: #1b2431; }
 
-  body {
+  /* ---------- Auth screen ---------- */
+  .auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 60%);
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 34px 32px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .auth-brand {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .auth-brand .mark {
+    display: inline-block;
+    width: 46px; height: 46px;
+    border-radius: 10px;
+    background: var(--navy);
+    color: var(--gold-light);
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 46px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .auth-brand h1 {
+    font-size: 17px;
     margin: 0;
-    background: var(--bg);
+    color: var(--navy);
+  }
+  .auth-brand .sub {
+    font-size: 12px;
+    color: var(--slate-light);
+    margin-top: 2px;
+  }
+  .auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .auth-tabs button {
+    flex: 1;
+    padding: 9px 0;
+    background: none;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--slate-light);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .auth-tabs button.active {
+    color: var(--navy);
+    border-bottom-color: var(--gold);
+  }
+  .auth-error {
+    background: #fbeae8;
+    color: var(--red);
+    font-size: 12.5px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    margin-bottom: 12px;
+  }
+  .auth-hint {
+    font-size: 11.5px;
+    color: var(--slate-light);
+    margin-top: 4px;
+  }
+
+  /* ---------- Shared form elements ---------- */
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: inherit;
+    background: #fbfcfd;
     color: #1b2431;
   }
-
-  .app {
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 22px 18px 60px;
+  input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--navy);
+    outline-offset: 0;
+    background: white;
   }
+  textarea { resize: vertical; min-height: 54px; }
+  .field { margin-bottom: 14px; }
+
+  .btn {
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn:hover { background: var(--navy-deep); }
+  .btn.gold { background: var(--gold); color: #241a08; }
+  .btn.gold:hover { background: var(--gold-light); }
+  .btn.secondary {
+    background: white;
+    color: var(--navy);
+    border: 1px solid var(--line);
+    width: auto;
+  }
+  .btn.secondary:hover { background: var(--grey-tag); }
+  .btn.small { padding: 6px 11px; font-size: 12px; width: auto; }
+  .btn.wfull { width: 100%; }
+
+  /* ---------- App shell ---------- */
+  .app { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
 
   .topbar {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     margin-bottom: 18px;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    background: var(--navy);
+    padding: 16px 20px;
+    border-radius: 12px;
+    color: white;
   }
-
-  .topbar h1 {
-    font-size: 20px;
-    margin: 0;
-    color: var(--navy);
-    letter-spacing: -0.2px;
+  .topbar .brand { display: flex; align-items: center; gap: 12px; }
+  .topbar .mark {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.12);
+    color: var(--gold-light);
+    font-weight: 800;
+    font-size: 15px;
+    line-height: 38px;
+    text-align: center;
   }
-
-  .topbar .sub {
-    font-size: 12.5px;
-    color: var(--slate-light);
+  .topbar h1 { font-size: 16.5px; margin: 0; }
+  .topbar .sub { font-size: 11.5px; color: #b9c3cc; margin-top: 1px; }
+  .topbar .who { font-size: 12.5px; color: #dfe6ec; text-align: right; }
+  .topbar .who b { color: white; }
+  .topbar .logout {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 7px 13px;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 10px;
   }
+  .topbar .logout:hover { background: rgba(255,255,255,0.18); }
+  .topbar-right { display: flex; align-items: center; }
 
   nav {
     display: flex;
@@ -65,7 +220,6 @@
     margin-bottom: 18px;
     overflow-x: auto;
   }
-
   nav button {
     border: none;
     background: transparent;
@@ -76,17 +230,9 @@
     border-radius: 7px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background .15s, color .15s;
   }
-
-  nav button.active {
-    background: var(--navy);
-    color: white;
-  }
-
-  nav button:not(.active):hover {
-    background: var(--grey-tag);
-  }
+  nav button.active { background: var(--navy); color: white; }
+  nav button:not(.active):hover { background: var(--grey-tag); }
 
   .card {
     background: var(--card);
@@ -95,72 +241,16 @@
     padding: 20px;
     margin-bottom: 16px;
   }
-
   .card h2 {
     font-size: 15px;
     margin: 0 0 14px 0;
     color: var(--navy);
+    border-left: 3px solid var(--gold);
+    padding-left: 10px;
   }
 
-  .grid2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  @media (max-width: 620px) {
-    .grid2 { grid-template-columns: 1fr; }
-  }
-
-  label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--slate);
-    margin-bottom: 4px;
-  }
-
-  input, select, textarea {
-    width: 100%;
-    padding: 9px 10px;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    font-size: 13.5px;
-    font-family: inherit;
-    background: #fbfcfd;
-    color: #1b2431;
-  }
-
-  input:focus, select:focus, textarea:focus {
-    outline: 2px solid var(--navy-light);
-    outline-offset: 0;
-    background: white;
-  }
-
-  textarea { resize: vertical; min-height: 54px; }
-
-  .field { margin-bottom: 12px; }
-
-  .btn {
-    background: var(--navy);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .btn:hover { background: var(--navy-light); }
-  .btn.secondary {
-    background: white;
-    color: var(--navy);
-    border: 1px solid var(--line);
-  }
-  .btn.secondary:hover { background: var(--grey-tag); }
-  .btn.small { padding: 6px 11px; font-size: 12px; }
-
-  .row-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
 
   .stat-grid {
     display: grid;
@@ -168,154 +258,97 @@
     gap: 10px;
     margin-bottom: 4px;
   }
+  .stat { background: #fbfcfd; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; border-top: 3px solid var(--gold); }
+  .stat .num { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+  .stat .lbl { font-size: 11.5px; color: var(--slate-light); margin-top: 2px; }
 
-  .stat {
-    background: #fbfcfd;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 12px 14px;
-  }
-
-  .stat .num {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--navy);
-    line-height: 1.1;
-  }
-  .stat .lbl {
-    font-size: 11.5px;
-    color: var(--slate-light);
-    margin-top: 2px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
-    text-align: left;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--slate-light);
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--line);
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--slate-light); padding: 8px 10px; border-bottom: 1px solid var(--line);
   }
-
-  td {
-    padding: 9px 10px;
-    border-bottom: 1px solid #eef0f3;
-    vertical-align: top;
-  }
-
+  td { padding: 9px 10px; border-bottom: 1px solid #eef0f3; vertical-align: top; }
   tr:hover td { background: #fafbfc; }
 
-  .tag {
-    display: inline-block;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11.5px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
   .tag.interested { background: #e5f3ec; color: var(--green); }
-  .tag.callback { background: #fdf1e2; color: var(--amber); }
+  .tag.callback { background: #fdf1e2; color: var(--gold); }
   .tag.meeting { background: #e6eef8; color: var(--blue); }
-  .tag.voicemail { background: var(--grey-tag); color: var(--slate); }
-  .tag.noanswer { background: var(--grey-tag); color: var(--slate); }
+  .tag.voicemail, .tag.noanswer, .tag.wrongnumber, .tag.gatekeeper, .tag.notinterested { background: var(--grey-tag); color: var(--slate); }
   .tag.hungup { background: #fbeae8; color: var(--red); }
-  .tag.wrongnumber { background: var(--grey-tag); color: var(--slate); }
-  .tag.gatekeeper { background: var(--grey-tag); color: var(--slate); }
-  .tag.notinterested { background: var(--grey-tag); color: var(--slate); }
 
-  .filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-  }
-  .filters select, .filters input {
-    width: auto;
-    min-width: 130px;
-  }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filters select, .filters input { width: auto; min-width: 130px; }
 
-  .empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--slate-light);
-    font-size: 13.5px;
-  }
-
-  .link-ref {
-    font-size: 12.5px;
-    color: var(--blue);
-    word-break: break-all;
-  }
-
+  .empty { text-align: center; padding: 40px 20px; color: var(--slate-light); font-size: 13.5px; }
+  .link-ref { font-size: 12.5px; color: var(--blue); word-break: break-all; }
   .table-wrap { overflow-x: auto; }
 
-  .person-breakdown {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
+  .person-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .person-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: #fbfcfd; border-top: 3px solid var(--gold); }
+  .person-card .name { font-weight: 700; color: var(--navy); font-size: 14px; margin-bottom: 8px; }
+  .person-card .role-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    background: var(--navy); color: white; margin-left: 6px; vertical-align: middle;
   }
-
-  .person-card {
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 14px;
-    background: #fbfcfd;
-  }
-  .person-card .name {
-    font-weight: 700;
-    color: var(--navy);
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-  .person-card .metric-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12.5px;
-    color: var(--slate);
-    padding: 2px 0;
-  }
+  .person-card .metric-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--slate); padding: 2px 0; }
   .person-card .metric-row b { color: #1b2431; }
 
-  .save-msg {
-    font-size: 12px;
-    color: var(--green);
-    margin-left: 10px;
-    opacity: 0;
-    transition: opacity .3s;
-  }
+  .save-msg { font-size: 12px; color: var(--green); margin-left: 10px; opacity: 0; transition: opacity .3s; }
   .save-msg.show { opacity: 1; }
 
   .notice {
-    background: #fff8ec;
-    border: 1px solid #f0dfb8;
-    color: #8a6a1f;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 12.5px;
-    margin-bottom: 16px;
+    background: #fff8ec; border: 1px solid #f0dfb8; color: #8a6a1f;
+    padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 16px;
   }
+  .loading { text-align: center; padding: 60px 20px; color: var(--slate-light); }
 
-  .loading {
+  /* ---------- Caller-only simple view ---------- */
+  .caller-shell { max-width: 520px; margin: 0 auto; padding: 24px 18px 60px; }
+  .confirm-box {
     text-align: center;
-    padding: 60px 20px;
-    color: var(--slate-light);
+    padding: 40px 20px;
   }
+  .confirm-box .check {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #e5f3ec; color: var(--green);
+    font-size: 30px; line-height: 60px; margin: 0 auto 14px;
+  }
+  .confirm-box h3 { color: var(--navy); margin: 0 0 6px 0; }
+  .confirm-box p { color: var(--slate); font-size: 13.5px; margin: 0 0 20px 0; }
 </style>
 </head>
 <body>
 
-<div class="app" id="app">
-  <div class="loading">Loading…</div>
-</div>
+<div id="app"><div class="loading">Loading…</div></div>
 
 <script>
+/* ============================================================
+   CONFIG — fill these in before deploying
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+const ADMIN_SIGNUP_CODE = "CHANGE_THIS_SECRET_CODE";
+
+/* ============================================================ */
+
+let auth = null, db = null, firebaseReady = false;
+try {
+  if (FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY") {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    firebaseReady = true;
+  }
+} catch (e) { console.error("Firebase init failed", e); }
+
 const OUTCOMES = [
   { key: "interested", label: "Interested", tagClass: "interested" },
   { key: "callback", label: "Callback requested", tagClass: "callback" },
@@ -327,65 +360,147 @@ const OUTCOMES = [
   { key: "wrongnumber", label: "Wrong number", tagClass: "wrongnumber" },
   { key: "notinterested", label: "Not interested", tagClass: "notinterested" },
 ];
-
-function outcomeMeta(key) {
-  return OUTCOMES.find(o => o.key === key) || OUTCOMES[4];
-}
-
-function todayStr() {
-  const d = new Date();
-  return d.toISOString().slice(0,10);
-}
-
-function uid() {
-  return 'c' + Date.now() + Math.random().toString(36).slice(2,8);
+function outcomeMeta(key) { return OUTCOMES.find(o => o.key === key) || OUTCOMES[4]; }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function escapeHtml(str) {
+  if (str === undefined || str === null) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
 let state = {
+  user: null,        // firebase auth user
+  profile: null,      // { name, role }
   view: 'log',
-  interns: [],
+  authMode: 'login',  // 'login' | 'signup'
+  authError: '',
+  users: [],          // all registered users (admin only)
   calls: [],
   loaded: false,
   filterIntern: 'all',
   filterOutcome: 'all',
   filterDate: '',
+  justSaved: false,
 };
 
-async function loadAll() {
-  try {
-    const internsRes = await window.storage.get('interns-list', true);
-    state.interns = internsRes ? JSON.parse(internsRes.value) : [];
-  } catch(e) { state.interns = []; }
+/* ============================================================
+   AUTH
+   ============================================================ */
 
-  try {
-    const listRes = await window.storage.list('call:', true);
-    const keys = listRes && listRes.keys ? listRes.keys : [];
-    const calls = [];
-    for (const k of keys) {
-      try {
-        const r = await window.storage.get(k, true);
-        if (r && r.value) calls.push(JSON.parse(r.value));
-      } catch(e) {}
-    }
-    calls.sort((a,b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
-    state.calls = calls;
-  } catch(e) { state.calls = []; }
-
-  state.loaded = true;
-  render();
+function renderAuthScreen() {
+  const isSignup = state.authMode === 'signup';
+  document.getElementById('app').innerHTML = `
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="mark">D&amp;P</div>
+          <h1>D&amp;P Brothers</h1>
+          <div class="sub">Outreach Call Log</div>
+        </div>
+        <div class="auth-tabs">
+          <button class="${!isSignup?'active':''}" onclick="switchAuthMode('login')">Log in</button>
+          <button class="${isSignup?'active':''}" onclick="switchAuthMode('signup')">Sign up</button>
+        </div>
+        ${state.authError ? `<div class="auth-error">${escapeHtml(state.authError)}</div>` : ''}
+        <form id="authForm">
+          ${isSignup ? `
+          <div class="field">
+            <label>Your name</label>
+            <input type="text" name="name" required placeholder="e.g. Ali Khan">
+          </div>` : ''}
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="you@example.com">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+          </div>
+          ${isSignup ? `
+          <div class="field">
+            <label>Admin code (leave blank if you're a caller)</label>
+            <input type="text" name="adminCode" placeholder="Only if given one">
+            <div class="auth-hint">Everyone signs up here. Only people with the correct admin code get admin access — everyone else is added as a caller.</div>
+          </div>` : ''}
+          <button type="submit" class="btn gold wfull">${isSignup ? 'Create account' : 'Log in'}</button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.getElementById('authForm').addEventListener('submit', handleAuthSubmit);
 }
 
-async function saveInternsList() {
+function switchAuthMode(mode) {
+  state.authMode = mode;
+  state.authError = '';
+  renderAuthScreen();
+}
+window.switchAuthMode = switchAuthMode;
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  if (!firebaseReady) {
+    state.authError = "Firebase isn't configured yet — the site owner needs to add the config (see setup comment at the top of the file).";
+    renderAuthScreen();
+    return;
+  }
+  const fd = new FormData(e.target);
+  const email = fd.get('email');
+  const password = fd.get('password');
+  state.authError = '';
   try {
-    await window.storage.set('interns-list', JSON.stringify(state.interns), true);
-  } catch(e) { console.error('Failed saving interns list', e); }
+    if (state.authMode === 'signup') {
+      const name = fd.get('name');
+      const adminCode = (fd.get('adminCode') || '').trim();
+      const role = (adminCode && adminCode === ADMIN_SIGNUP_CODE) ? 'admin' : 'caller';
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      await db.collection('users').doc(cred.user.uid).set({
+        name, role, email, createdAt: new Date().toISOString(),
+      });
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+  } catch (err) {
+    state.authError = friendlyAuthError(err);
+    renderAuthScreen();
+  }
+}
+
+function friendlyAuthError(err) {
+  const code = err.code || '';
+  if (code.includes('email-already-in-use')) return 'An account already exists with that email — try logging in instead.';
+  if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect email or password.';
+  if (code.includes('user-not-found')) return 'No account found with that email.';
+  if (code.includes('weak-password')) return 'Password should be at least 6 characters.';
+  if (code.includes('invalid-email')) return 'That email address doesn\'t look right.';
+  return err.message || 'Something went wrong — please try again.';
+}
+
+async function logout() {
+  await auth.signOut();
+}
+window.logout = logout;
+
+/* ============================================================
+   DATA LOADING (admin loads everything, caller loads nothing extra)
+   ============================================================ */
+
+async function loadAdminData() {
+  try {
+    const usersSnap = await db.collection('users').get();
+    state.users = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  } catch (e) { console.error('Failed loading users', e); state.users = []; }
+
+  try {
+    const callsSnap = await db.collection('calls').orderBy('createdAt', 'desc').get();
+    state.calls = callsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { console.error('Failed loading calls', e); state.calls = []; }
 }
 
 async function saveCall(call) {
   try {
-    await window.storage.set('call:' + call.id, JSON.stringify(call), true);
+    await db.collection('calls').add({ ...call, uid: state.user.uid });
     return true;
-  } catch(e) {
+  } catch (e) {
     console.error('Failed saving call', e);
     return false;
   }
@@ -393,116 +508,88 @@ async function saveCall(call) {
 
 async function deleteCall(id) {
   try {
-    await window.storage.delete('call:' + id, true);
+    await db.collection('calls').doc(id).delete();
     state.calls = state.calls.filter(c => c.id !== id);
     render();
-  } catch(e) { console.error('Failed deleting call', e); }
+  } catch (e) { console.error('Failed deleting call', e); alert('Could not delete — check console for details.'); }
 }
+window.confirmDelete = function(id) {
+  if (confirm('Delete this call entry? This cannot be undone.')) deleteCall(id);
+};
 
-function setView(v) {
-  state.view = v;
-  render();
+async function updateUserRole(uid, newRole) {
+  try {
+    await db.collection('users').doc(uid).update({ role: newRole });
+    state.users = state.users.map(u => u.uid === uid ? { ...u, role: newRole } : u);
+    render();
+  } catch (e) { console.error('Failed updating role', e); alert('Could not update role — check console for details.'); }
 }
+window.updateUserRole = updateUserRole;
 
-function flashSave(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1600);
-}
+/* ============================================================
+   RENDER — CALLER VIEW (simple, log-only)
+   ============================================================ */
 
-// ---------- RENDER ----------
-
-function render() {
+function renderCallerShell() {
   const app = document.getElementById('app');
-  if (!state.loaded) {
-    app.innerHTML = '<div class="loading">Loading…</div>';
-    return;
-  }
-
   app.innerHTML = `
-    <div class="topbar">
-      <div>
-        <h1>Outreach Call Log</h1>
-        <div class="sub">Daily call tracking &amp; pipeline for the outreach team</div>
+    <div class="topbar" style="border-radius:0;">
+      <div class="brand">
+        <div class="mark">D&amp;P</div>
+        <div>
+          <h1>Outreach Log</h1>
+          <div class="sub">D&amp;P Brothers</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="who"><b>${escapeHtml(state.profile.name)}</b><br>Caller</span>
+        <button class="logout" onclick="logout()">Log out</button>
       </div>
     </div>
-    <nav>
-      <button class="${state.view==='log'?'active':''}" onclick="setView('log')">Log a Call</button>
-      <button class="${state.view==='dashboard'?'active':''}" onclick="setView('dashboard')">Dashboard</button>
-      <button class="${state.view==='pipeline'?'active':''}" onclick="setView('pipeline')">Pipeline</button>
-      <button class="${state.view==='all'?'active':''}" onclick="setView('all')">All Calls</button>
-      <button class="${state.view==='team'?'active':''}" onclick="setView('team')">Team</button>
-    </nav>
-    <div id="viewRoot"></div>
+    <div class="caller-shell" id="callerBody"></div>
   `;
-
-  const root = document.getElementById('viewRoot');
-  if (state.view === 'log') root.innerHTML = renderLogView();
-  else if (state.view === 'dashboard') root.innerHTML = renderDashboard();
-  else if (state.view === 'pipeline') root.innerHTML = renderPipeline();
-  else if (state.view === 'all') root.innerHTML = renderAllCalls();
-  else if (state.view === 'team') root.innerHTML = renderTeam();
-
-  attachHandlers();
+  renderCallerBody();
 }
 
-function internOptions(selected) {
-  if (state.interns.length === 0) {
-    return '<option value="">Add team members in the Team tab first</option>';
+function renderCallerBody() {
+  const body = document.getElementById('callerBody');
+  if (state.justSaved) {
+    body.innerHTML = `
+      <div class="card confirm-box">
+        <div class="check">✓</div>
+        <h3>Call logged</h3>
+        <p>Thanks — that's saved. Ready for the next one?</p>
+        <button class="btn gold" onclick="logAnother()">Log another call</button>
+      </div>
+    `;
+    return;
   }
-  return state.interns.map(n =>
-    `<option value="${escapeAttr(n)}" ${n===selected?'selected':''}>${escapeHtml(n)}</option>`
-  ).join('');
-}
-
-function outcomeOptions(selected) {
-  return OUTCOMES.map(o =>
-    `<option value="${o.key}" ${o.key===selected?'selected':''}>${o.label}</option>`
-  ).join('');
-}
-
-function renderLogView() {
-  return `
+  body.innerHTML = `
     <div class="card">
       <h2>Log a call <span class="save-msg" id="saveMsg">Saved ✓</span></h2>
-      ${state.interns.length === 0 ? '<div class="notice">No team members added yet. Go to the <b>Team</b> tab to add names first, then come back here.</div>' : ''}
       <form id="callForm">
-        <div class="grid2">
-          <div class="field">
-            <label>Date</label>
-            <input type="date" name="date" value="${todayStr()}" required>
-          </div>
-          <div class="field">
-            <label>Caller</label>
-            <select name="intern" required>
-              <option value="">Select…</option>
-              ${internOptions('')}
-            </select>
-          </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" name="date" value="${todayStr()}" required>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label>Firm / Company called</label>
-            <input type="text" name="firm" placeholder="e.g. Hallworth Architects" required>
-          </div>
-          <div class="field">
-            <label>Contact person (optional)</label>
-            <input type="text" name="contact" placeholder="e.g. James, Office Manager">
-          </div>
+        <div class="field">
+          <label>Firm / Company called</label>
+          <input type="text" name="firm" placeholder="e.g. Hallworth Architects" required>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label>Outcome</label>
-            <select name="outcome" required>
-              <option value="">Select…</option>
-              ${outcomeOptions('')}
-            </select>
-          </div>
-          <div class="field">
-            <label>Follow-up date (if applicable)</label>
-            <input type="date" name="followUp">
-          </div>
+        <div class="field">
+          <label>Contact person (optional)</label>
+          <input type="text" name="contact" placeholder="e.g. James, Office Manager">
+        </div>
+        <div class="field">
+          <label>Outcome</label>
+          <select name="outcome" required>
+            <option value="">Select…</option>
+            ${OUTCOMES.map(o => `<option value="${o.key}">${o.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Follow-up date (if applicable)</label>
+          <input type="date" name="followUp">
         </div>
         <div class="field">
           <label>Notes</label>
@@ -512,13 +599,134 @@ function renderLogView() {
           <label>Recording reference (link to where the recording is saved, if any)</label>
           <input type="text" name="recording" placeholder="e.g. Drive link, or filename in shared folder">
         </div>
-        <div class="row-actions">
-          <button type="submit" class="btn">Save call</button>
+        <button type="submit" class="btn gold wfull">Save call</button>
+      </form>
+    </div>
+  `;
+  document.getElementById('callForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const call = {
+      date: fd.get('date'),
+      intern: state.profile.name,
+      firm: fd.get('firm'),
+      contact: fd.get('contact'),
+      outcome: fd.get('outcome'),
+      followUp: fd.get('followUp'),
+      notes: fd.get('notes'),
+      recording: fd.get('recording'),
+      createdAt: new Date().toISOString(),
+    };
+    const ok = await saveCall(call);
+    if (ok) {
+      state.justSaved = true;
+      renderCallerBody();
+    } else {
+      alert('Could not save this call — please check your connection and try again.');
+    }
+  });
+}
+
+function logAnother() {
+  state.justSaved = false;
+  renderCallerBody();
+}
+window.logAnother = logAnother;
+
+/* ============================================================
+   RENDER — ADMIN VIEW (full app)
+   ============================================================ */
+
+function setView(v) { state.view = v; render(); }
+window.setView = setView;
+
+function renderAdminShell() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="app">
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark">D&amp;P</div>
+          <div>
+            <h1>Outreach Call Log</h1>
+            <div class="sub">D&amp;P Brothers — Admin view</div>
+          </div>
         </div>
+        <div class="topbar-right">
+          <span class="who"><b>${escapeHtml(state.profile.name)}</b><br>Admin</span>
+          <button class="logout" onclick="logout()">Log out</button>
+        </div>
+      </div>
+      <nav>
+        <button class="${state.view==='log'?'active':''}" onclick="setView('log')">Log a Call</button>
+        <button class="${state.view==='dashboard'?'active':''}" onclick="setView('dashboard')">Dashboard</button>
+        <button class="${state.view==='pipeline'?'active':''}" onclick="setView('pipeline')">Pipeline</button>
+        <button class="${state.view==='all'?'active':''}" onclick="setView('all')">All Calls</button>
+        <button class="${state.view==='team'?'active':''}" onclick="setView('team')">Team</button>
+      </nav>
+      <div id="viewRoot"></div>
+    </div>
+  `;
+  const root = document.getElementById('viewRoot');
+  if (state.view === 'log') root.innerHTML = renderAdminLogView();
+  else if (state.view === 'dashboard') root.innerHTML = renderDashboard();
+  else if (state.view === 'pipeline') root.innerHTML = renderPipeline();
+  else if (state.view === 'all') root.innerHTML = renderAllCalls();
+  else if (state.view === 'team') root.innerHTML = renderTeam();
+  attachAdminHandlers();
+}
+
+function callerNames() {
+  return state.users.map(u => u.name);
+}
+
+function renderAdminLogView() {
+  return `
+    <div class="card">
+      <h2>Log a call (as ${escapeHtml(state.profile.name)}) <span class="save-msg" id="saveMsg">Saved ✓</span></h2>
+      <form id="callForm">
+        <div class="grid2">
+          <div class="field">
+            <label>Date</label>
+            <input type="date" name="date" value="${todayStr()}" required>
+          </div>
+          <div class="field">
+            <label>Firm / Company called</label>
+            <input type="text" name="firm" placeholder="e.g. Hallworth Architects" required>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Contact person (optional)</label>
+            <input type="text" name="contact" placeholder="e.g. James, Office Manager">
+          </div>
+          <div class="field">
+            <label>Outcome</label>
+            <select name="outcome" required>
+              <option value="">Select…</option>
+              ${OUTCOMES.map(o => `<option value="${o.key}">${o.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Follow-up date (if applicable)</label>
+            <input type="date" name="followUp">
+          </div>
+          <div class="field">
+            <label>Recording reference</label>
+            <input type="text" name="recording" placeholder="Drive link or filename">
+          </div>
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea name="notes"></textarea>
+        </div>
+        <button type="submit" class="btn gold" style="width:auto;">Save call</button>
       </form>
     </div>
     <div class="card">
-      <h2>Today's calls</h2>
+      <h2>Today's calls (whole team)</h2>
       ${renderTodayMiniList()}
     </div>
   `;
@@ -550,27 +758,23 @@ function renderTodayMiniList() {
 
 function renderDashboard() {
   const today = todayStr();
-  const todays = state.calls.filter(c => c.date === today);
+  const totalToday = state.calls.filter(c => c.date === today).length;
   const total = state.calls.length;
-  const totalToday = todays.length;
+  const count = (key) => state.calls.filter(c => c.outcome === key).length;
+  const answered = state.calls.filter(c => !['voicemail','noanswer','wrongnumber','gatekeeper'].includes(c.outcome)).length;
+  const interestedTotal = count('interested') + count('callback');
+  const meetingsTotal = count('meeting');
 
-  const count = (list, key) => list.filter(c => c.outcome === key).length;
-
-  const answered = (list) => list.filter(c => !['voicemail','noanswer','wrongnumber','gatekeeper'].includes(c.outcome)).length;
-
-  const meetingsTotal = count(state.calls, 'meeting');
-  const interestedTotal = count(state.calls, 'interested') + count(state.calls, 'callback');
-
-  const byIntern = {};
-  state.interns.forEach(n => byIntern[n] = { calls: 0, answered: 0, voicemail: 0, hungup: 0, meetings: 0, interested: 0 });
+  const byPerson = {};
+  state.users.forEach(u => byPerson[u.name] = { calls: 0, answered: 0, voicemail: 0, hungup: 0, meetings: 0, interested: 0, role: u.role });
   state.calls.forEach(c => {
-    if (!byIntern[c.intern]) byIntern[c.intern] = { calls: 0, answered: 0, voicemail: 0, hungup: 0, meetings: 0, interested: 0 };
-    byIntern[c.intern].calls++;
-    if (!['voicemail','noanswer','wrongnumber','gatekeeper'].includes(c.outcome)) byIntern[c.intern].answered++;
-    if (c.outcome === 'voicemail') byIntern[c.intern].voicemail++;
-    if (c.outcome === 'hungup') byIntern[c.intern].hungup++;
-    if (c.outcome === 'meeting') byIntern[c.intern].meetings++;
-    if (c.outcome === 'interested' || c.outcome === 'callback') byIntern[c.intern].interested++;
+    if (!byPerson[c.intern]) byPerson[c.intern] = { calls: 0, answered: 0, voicemail: 0, hungup: 0, meetings: 0, interested: 0, role: '' };
+    byPerson[c.intern].calls++;
+    if (!['voicemail','noanswer','wrongnumber','gatekeeper'].includes(c.outcome)) byPerson[c.intern].answered++;
+    if (c.outcome === 'voicemail') byPerson[c.intern].voicemail++;
+    if (c.outcome === 'hungup') byPerson[c.intern].hungup++;
+    if (c.outcome === 'meeting') byPerson[c.intern].meetings++;
+    if (c.outcome === 'interested' || c.outcome === 'callback') byPerson[c.intern].interested++;
   });
 
   return `
@@ -579,31 +783,28 @@ function renderDashboard() {
       <div class="stat-grid">
         <div class="stat"><div class="num">${total}</div><div class="lbl">Total calls logged</div></div>
         <div class="stat"><div class="num">${totalToday}</div><div class="lbl">Calls today</div></div>
-        <div class="stat"><div class="num">${answered(state.calls)}</div><div class="lbl">Actually answered</div></div>
-        <div class="stat"><div class="num">${count(state.calls,'voicemail')}</div><div class="lbl">Voicemail / machine</div></div>
-        <div class="stat"><div class="num">${count(state.calls,'hungup')}</div><div class="lbl">Hung up</div></div>
+        <div class="stat"><div class="num">${answered}</div><div class="lbl">Actually answered</div></div>
+        <div class="stat"><div class="num">${count('voicemail')}</div><div class="lbl">Voicemail / machine</div></div>
+        <div class="stat"><div class="num">${count('hungup')}</div><div class="lbl">Hung up</div></div>
         <div class="stat"><div class="num">${interestedTotal}</div><div class="lbl">Interested / callback</div></div>
         <div class="stat"><div class="num">${meetingsTotal}</div><div class="lbl">Meetings booked</div></div>
       </div>
     </div>
     <div class="card">
       <h2>By team member</h2>
-      ${state.interns.length === 0 ? '<div class="empty">Add team members in the Team tab to see a breakdown.</div>' : `
       <div class="person-breakdown">
-        ${state.interns.map(n => {
-          const s = byIntern[n];
-          return `
+        ${Object.entries(byPerson).map(([name, s]) => `
           <div class="person-card">
-            <div class="name">${escapeHtml(n)}</div>
+            <div class="name">${escapeHtml(name)}${s.role ? `<span class="role-badge">${s.role}</span>` : ''}</div>
             <div class="metric-row"><span>Calls made</span><b>${s.calls}</b></div>
             <div class="metric-row"><span>Answered</span><b>${s.answered}</b></div>
             <div class="metric-row"><span>Voicemail</span><b>${s.voicemail}</b></div>
             <div class="metric-row"><span>Hung up</span><b>${s.hungup}</b></div>
             <div class="metric-row"><span>Interested / callback</span><b>${s.interested}</b></div>
             <div class="metric-row"><span>Meetings booked</span><b>${s.meetings}</b></div>
-          </div>`;
-        }).join('')}
-      </div>`}
+          </div>
+        `).join('')}
+      </div>
     </div>
   `;
 }
@@ -611,17 +812,11 @@ function renderDashboard() {
 function renderPipeline() {
   const pipelineOutcomes = ['interested', 'callback', 'meeting'];
   let entries = state.calls.filter(c => pipelineOutcomes.includes(c.outcome));
-
-  entries = entries.slice().sort((a,b) => {
-    const fa = a.followUp || '9999-99-99';
-    const fb = b.followUp || '9999-99-99';
-    return fa.localeCompare(fb);
-  });
+  entries = entries.slice().sort((a,b) => (a.followUp || '9999-99-99').localeCompare(b.followUp || '9999-99-99'));
 
   if (entries.length === 0) {
     return `<div class="card"><h2>Pipeline</h2><div class="empty">No live leads yet — entries marked Interested, Callback Requested, or Meeting Booked will show up here.</div></div>`;
   }
-
   return `
     <div class="card">
       <h2>Pipeline — leads worth following up</h2>
@@ -660,7 +855,7 @@ function renderAllCalls() {
       <div class="filters">
         <select id="fIntern">
           <option value="all">All callers</option>
-          ${state.interns.map(n => `<option value="${escapeAttr(n)}" ${state.filterIntern===n?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+          ${state.users.map(u => `<option value="${escapeHtml(u.name)}" ${state.filterIntern===u.name?'selected':''}>${escapeHtml(u.name)}</option>`).join('')}
         </select>
         <select id="fOutcome">
           <option value="all">All outcomes</option>
@@ -698,32 +893,37 @@ function renderAllCalls() {
 function renderTeam() {
   return `
     <div class="card">
-      <h2>Team members</h2>
-      <form id="addInternForm" class="row-actions" style="margin-bottom:16px;">
-        <input type="text" id="newInternName" placeholder="Add a name, e.g. Ali" style="max-width:260px;">
-        <button type="submit" class="btn small">Add</button>
-      </form>
-      ${state.interns.length === 0 ? '<div class="empty">No team members yet. Add names above so they can be selected when logging calls.</div>' : `
+      <h2>Team</h2>
+      <div class="notice">New people join by signing up themselves at the login screen. They'll appear here once they do — use the dropdown to change their role.</div>
+      ${state.users.length === 0 ? '<div class="empty">No one has signed up yet.</div>' : `
       <table>
-        <thead><tr><th>Name</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
         <tbody>
-          ${state.interns.map(n => `<tr><td>${escapeHtml(n)}</td><td><button class="btn secondary small" onclick="removeIntern('${escapeAttr(n)}')">Remove</button></td></tr>`).join('')}
+          ${state.users.map(u => `<tr>
+            <td>${escapeHtml(u.name)}</td>
+            <td>${escapeHtml(u.email || '—')}</td>
+            <td>
+              <select onchange="updateUserRole('${u.uid}', this.value)" style="width:auto;">
+                <option value="caller" ${u.role==='caller'?'selected':''}>Caller</option>
+                <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+              </select>
+            </td>
+          </tr>`).join('')}
         </tbody>
       </table>`}
     </div>
   `;
 }
 
-function attachHandlers() {
+function attachAdminHandlers() {
   const callForm = document.getElementById('callForm');
   if (callForm) {
     callForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(callForm);
       const call = {
-        id: uid(),
         date: fd.get('date'),
-        intern: fd.get('intern'),
+        intern: state.profile.name,
         firm: fd.get('firm'),
         contact: fd.get('contact'),
         outcome: fd.get('outcome'),
@@ -734,29 +934,16 @@ function attachHandlers() {
       };
       const ok = await saveCall(call);
       if (ok) {
+        call.id = 'temp-' + Date.now();
         state.calls.unshift(call);
         render();
-        flashSave('saveMsg');
+        const el = document.getElementById('saveMsg');
+        if (el) { el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1600); }
       } else {
         alert('Could not save this call — please try again.');
       }
     });
   }
-
-  const addInternForm = document.getElementById('addInternForm');
-  if (addInternForm) {
-    addInternForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('newInternName');
-      const name = input.value.trim();
-      if (!name) return;
-      if (state.interns.includes(name)) { input.value=''; return; }
-      state.interns.push(name);
-      await saveInternsList();
-      render();
-    });
-  }
-
   const fIntern = document.getElementById('fIntern');
   if (fIntern) fIntern.addEventListener('change', () => { state.filterIntern = fIntern.value; render(); });
   const fOutcome = document.getElementById('fOutcome');
@@ -765,41 +952,92 @@ function attachHandlers() {
   if (fDate) fDate.addEventListener('change', () => { state.filterDate = fDate.value; render(); });
 }
 
-async function removeIntern(name) {
-  if (!confirm(`Remove ${name} from the team list? Their past call logs will stay recorded.`)) return;
-  state.interns = state.interns.filter(n => n !== name);
-  await saveInternsList();
+function clearFilters() {
+  state.filterIntern = 'all'; state.filterOutcome = 'all'; state.filterDate = '';
   render();
 }
+window.clearFilters = clearFilters;
 
-function confirmDelete(id) {
-  if (confirm('Delete this call entry? This cannot be undone.')) {
-    deleteCall(id);
+/* ============================================================
+   MASTER RENDER + AUTH STATE LISTENER
+   ============================================================ */
+
+async function render() {
+  if (!state.user) { renderAuthScreen(); return; }
+  if (!state.profile) {
+    document.getElementById('app').innerHTML = '<div class="loading">Setting things up…</div>';
+    return;
+  }
+  if (state.profile.role === 'admin') {
+    if (!state.loaded) {
+      document.getElementById('app').innerHTML = '<div class="loading">Loading…</div>';
+      await loadAdminData();
+      state.loaded = true;
+    }
+    renderAdminShell();
+  } else {
+    renderCallerShell();
   }
 }
 
-function clearFilters() {
-  state.filterIntern = 'all';
-  state.filterOutcome = 'all';
-  state.filterDate = '';
-  render();
+if (firebaseReady) {
+  auth.onAuthStateChanged(async (user) => {
+    state.user = user;
+    state.profile = null;
+    state.loaded = false;
+    if (user) {
+      try {
+        const doc = await db.collection('users').doc(user.uid).get();
+        state.profile = doc.exists ? doc.data() : { name: user.email, role: 'caller' };
+      } catch (e) {
+        console.error('Failed loading profile', e);
+        state.profile = { name: user.email, role: 'caller' };
+      }
+    }
+    render();
+  });
+} else {
+  document.getElementById('app').innerHTML = `
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="mark">D&amp;P</div>
+          <h1>Setup needed</h1>
+          <div class="sub">Firebase isn't configured yet</div>
+        </div>
+        <p style="font-size:13px;color:var(--slate);">
+          Open this file and fill in <b>FIREBASE_CONFIG</b> near the top of the script
+          (see the setup instructions in the HTML comment at the very top of the file).
+        </p>
+      </div>
+    </div>
+  `;
 }
-
-function escapeHtml(str) {
-  if (str === undefined || str === null) return '';
-  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-}
-function escapeAttr(str) {
-  return escapeHtml(str);
-}
-
-// expose functions used by inline handlers
-window.setView = setView;
-window.removeIntern = removeIntern;
-window.confirmDelete = confirmDelete;
-window.clearFilters = clearFilters;
-
-loadAll();
 </script>
+
+<!--
+  ============================================================================
+  RULES.txt — paste this into Firebase console > Firestore Database > Rules
+
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      function isAdmin() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+      match /users/{userId} {
+        allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow create: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null && isAdmin();
+      }
+      match /calls/{callId} {
+        allow create: if request.auth != null;
+        allow read, update, delete: if request.auth != null && isAdmin();
+      }
+    }
+  }
+  ============================================================================
+-->
 </body>
 </html>
