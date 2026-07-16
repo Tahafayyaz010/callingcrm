@@ -46,7 +46,6 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: #1b2431; }
 
-  /* ---------- Auth screen ---------- */
   .auth-wrap {
     min-height: 100vh;
     display: flex;
@@ -63,10 +62,7 @@
     max-width: 380px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25);
   }
-  .auth-brand {
-    text-align: center;
-    margin-bottom: 22px;
-  }
+  .auth-brand { text-align: center; margin-bottom: 22px; }
   .auth-brand .mark {
     display: inline-block;
     width: 46px; height: 46px;
@@ -79,185 +75,89 @@
     margin-bottom: 10px;
     letter-spacing: 0.5px;
   }
-  .auth-brand h1 {
-    font-size: 17px;
-    margin: 0;
-    color: var(--navy);
-  }
-  .auth-brand .sub {
-    font-size: 12px;
-    color: var(--slate-light);
-    margin-top: 2px;
-  }
-  .auth-tabs {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--line);
-  }
+  .auth-brand h1 { font-size: 17px; margin: 0; color: var(--navy); }
+  .auth-brand .sub { font-size: 12px; color: var(--slate-light); margin-top: 2px; }
+  .auth-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
   .auth-tabs button {
-    flex: 1;
-    padding: 9px 0;
-    background: none;
-    border: none;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--slate-light);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
+    flex: 1; padding: 9px 0; background: none; border: none;
+    font-size: 13.5px; font-weight: 600; color: var(--slate-light);
+    cursor: pointer; border-bottom: 2px solid transparent;
   }
-  .auth-tabs button.active {
-    color: var(--navy);
-    border-bottom-color: var(--gold);
-  }
+  .auth-tabs button.active { color: var(--navy); border-bottom-color: var(--gold); }
   .auth-error {
-    background: #fbeae8;
-    color: var(--red);
-    font-size: 12.5px;
-    padding: 8px 12px;
-    border-radius: 7px;
-    margin-bottom: 12px;
+    background: #fbeae8; color: var(--red); font-size: 12.5px;
+    padding: 8px 12px; border-radius: 7px; margin-bottom: 12px;
   }
-  .auth-hint {
-    font-size: 11.5px;
-    color: var(--slate-light);
-    margin-top: 4px;
-  }
+  .auth-hint { font-size: 11.5px; color: var(--slate-light); margin-top: 4px; }
 
-  /* ---------- Shared form elements ---------- */
   label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 4px; }
   input, select, textarea {
-    width: 100%;
-    padding: 10px 11px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-family: inherit;
-    background: #fbfcfd;
-    color: #1b2431;
+    width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 13.5px; font-family: inherit; background: #fbfcfd; color: #1b2431;
   }
-  input:focus, select:focus, textarea:focus {
-    outline: 2px solid var(--navy);
-    outline-offset: 0;
-    background: white;
-  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--navy); outline-offset: 0; background: white; }
   textarea { resize: vertical; min-height: 54px; }
   .field { margin-bottom: 14px; }
 
   .btn {
-    background: var(--navy);
-    color: white;
-    border: none;
-    padding: 11px 18px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
+    background: var(--navy); color: white; border: none; padding: 11px 18px;
+    border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; width: 100%;
   }
   .btn:hover { background: var(--navy-deep); }
   .btn.gold { background: var(--gold); color: #241a08; }
   .btn.gold:hover { background: var(--gold-light); }
-  .btn.secondary {
-    background: white;
-    color: var(--navy);
-    border: 1px solid var(--line);
-    width: auto;
-  }
+  .btn.secondary { background: white; color: var(--navy); border: 1px solid var(--line); width: auto; }
   .btn.secondary:hover { background: var(--grey-tag); }
   .btn.small { padding: 6px 11px; font-size: 12px; width: auto; }
   .btn.wfull { width: 100%; }
 
-  /* ---------- App shell ---------- */
   .app { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
 
   .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    gap: 10px;
-    background: var(--navy);
-    padding: 16px 20px;
-    border-radius: 12px;
-    color: white;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+    background: var(--navy); padding: 16px 20px; border-radius: 12px; color: white;
   }
   .topbar .brand { display: flex; align-items: center; gap: 12px; }
   .topbar .mark {
-    width: 38px; height: 38px;
-    border-radius: 9px;
-    background: rgba(255,255,255,0.12);
-    color: var(--gold-light);
-    font-weight: 800;
-    font-size: 15px;
-    line-height: 38px;
-    text-align: center;
+    width: 38px; height: 38px; border-radius: 9px; background: rgba(255,255,255,0.12);
+    color: var(--gold-light); font-weight: 800; font-size: 15px; line-height: 38px; text-align: center;
   }
   .topbar h1 { font-size: 16.5px; margin: 0; }
   .topbar .sub { font-size: 11.5px; color: #b9c3cc; margin-top: 1px; }
   .topbar .who { font-size: 12.5px; color: #dfe6ec; text-align: right; }
   .topbar .who b { color: white; }
   .topbar .logout {
-    background: rgba(255,255,255,0.1);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.25);
-    padding: 7px 13px;
-    border-radius: 7px;
-    font-size: 12px;
-    cursor: pointer;
-    margin-left: 10px;
+    background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.25);
+    padding: 7px 13px; border-radius: 7px; font-size: 12px; cursor: pointer; margin-left: 10px;
   }
   .topbar .logout:hover { background: rgba(255,255,255,0.18); }
   .topbar-right { display: flex; align-items: center; }
 
   nav {
-    display: flex;
-    gap: 4px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 4px;
-    margin-bottom: 18px;
-    overflow-x: auto;
+    display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 4px; margin-bottom: 18px; overflow-x: auto;
   }
   nav button {
-    border: none;
-    background: transparent;
-    padding: 9px 16px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--slate);
-    border-radius: 7px;
-    cursor: pointer;
-    white-space: nowrap;
+    border: none; background: transparent; padding: 9px 16px; font-size: 13.5px;
+    font-weight: 600; color: var(--slate); border-radius: 7px; cursor: pointer; white-space: nowrap;
   }
   nav button.active { background: var(--navy); color: white; }
   nav button:not(.active):hover { background: var(--grey-tag); }
 
   .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
   }
   .card h2 {
-    font-size: 15px;
-    margin: 0 0 14px 0;
-    color: var(--navy);
-    border-left: 3px solid var(--gold);
-    padding-left: 10px;
+    font-size: 15px; margin: 0 0 14px 0; color: var(--navy);
+    border-left: 3px solid var(--gold); padding-left: 10px;
   }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
 
-  .stat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-    margin-bottom: 4px;
-  }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 4px; }
   .stat { background: #fbfcfd; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; border-top: 3px solid var(--gold); }
   .stat .num { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.1; }
   .stat .lbl { font-size: 11.5px; color: var(--slate-light); margin-top: 2px; }
@@ -303,12 +203,8 @@
   }
   .loading { text-align: center; padding: 60px 20px; color: var(--slate-light); }
 
-  /* ---------- Caller-only simple view ---------- */
   .caller-shell { max-width: 520px; margin: 0 auto; padding: 24px 18px 60px; }
-  .confirm-box {
-    text-align: center;
-    padding: 40px 20px;
-  }
+  .confirm-box { text-align: center; padding: 40px 20px; }
   .confirm-box .check {
     width: 60px; height: 60px; border-radius: 50%;
     background: #e5f3ec; color: var(--green);
@@ -323,9 +219,6 @@
 <div id="app"><div class="loading">Loading…</div></div>
 
 <script>
-/* ============================================================
-   CONFIG — fill these in before deploying
-   ============================================================ */
 const FIREBASE_CONFIG = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -336,8 +229,6 @@ const FIREBASE_CONFIG = {
 };
 
 const ADMIN_SIGNUP_CODE = "CHANGE_THIS_SECRET_CODE";
-
-/* ============================================================ */
 
 let auth = null, db = null, firebaseReady = false;
 try {
@@ -368,12 +259,12 @@ function escapeHtml(str) {
 }
 
 let state = {
-  user: null,        // firebase auth user
-  profile: null,      // { name, role }
+  user: null,
+  profile: null,
   view: 'log',
-  authMode: 'login',  // 'login' | 'signup'
+  authMode: 'login',
   authError: '',
-  users: [],          // all registered users (admin only)
+  users: [],
   calls: [],
   loaded: false,
   filterIntern: 'all',
@@ -381,10 +272,6 @@ let state = {
   filterDate: '',
   justSaved: false,
 };
-
-/* ============================================================
-   AUTH
-   ============================================================ */
 
 function renderAuthScreen() {
   const isSignup = state.authMode === 'signup';
@@ -480,10 +367,6 @@ async function logout() {
 }
 window.logout = logout;
 
-/* ============================================================
-   DATA LOADING (admin loads everything, caller loads nothing extra)
-   ============================================================ */
-
 async function loadAdminData() {
   try {
     const usersSnap = await db.collection('users').get();
@@ -525,10 +408,6 @@ async function updateUserRole(uid, newRole) {
   } catch (e) { console.error('Failed updating role', e); alert('Could not update role — check console for details.'); }
 }
 window.updateUserRole = updateUserRole;
-
-/* ============================================================
-   RENDER — CALLER VIEW (simple, log-only)
-   ============================================================ */
 
 function renderCallerShell() {
   const app = document.getElementById('app');
@@ -633,10 +512,6 @@ function logAnother() {
 }
 window.logAnother = logAnother;
 
-/* ============================================================
-   RENDER — ADMIN VIEW (full app)
-   ============================================================ */
-
 function setView(v) { state.view = v; render(); }
 window.setView = setView;
 
@@ -674,10 +549,6 @@ function renderAdminShell() {
   else if (state.view === 'all') root.innerHTML = renderAllCalls();
   else if (state.view === 'team') root.innerHTML = renderTeam();
   attachAdminHandlers();
-}
-
-function callerNames() {
-  return state.users.map(u => u.name);
 }
 
 function renderAdminLogView() {
@@ -957,10 +828,6 @@ function clearFilters() {
   render();
 }
 window.clearFilters = clearFilters;
-
-/* ============================================================
-   MASTER RENDER + AUTH STATE LISTENER
-   ============================================================ */
 
 async function render() {
   if (!state.user) { renderAuthScreen(); return; }
